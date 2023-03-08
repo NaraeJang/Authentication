@@ -41,13 +41,33 @@ app.get('/', (req, res) => {
 
 app.route('/login')
 
-.get((req, res) => {
-    res.render('login');
-})
+    .get((req, res) => {
+        res.render('login');
+    })
 
-.post((req, res)=> {
+    .post((req, res) => {
+        const username = req.body.username;
+        const password = req.body.password;
 
-});
+        User.findOne({
+                email: username
+            })
+            .then((foundUser) => {
+                if (foundUser) {
+                    if (foundUser.password === password) {
+                        res.render("secrets");
+                    } else {
+                        console.log('The password does not match with the email. Retry it.');
+                        res.redirect('login');
+                    }
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                res.send(400, "Bad Request");
+            });
+
+    });
 
 
 
