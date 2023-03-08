@@ -1,0 +1,28 @@
+{
+  "name": "authentication",
+  "version": "1.0.0",
+  "description": "Learning Authentication & Security",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NaraeJang/Authentication.git"
+  },
+  "keywords": [
+    "Authentication",
+    "&",
+    "Security"
+  ],
+  "author": "Narae Jang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NaraeJang/Authentication/issues"
+  },
+  "homepage": "https://github.com/NaraeJang/Authentication#readme",
+  "dependencies": {
+    "ejs": "^3.1.8",
+    "express": "^4.18.2"
+  }
+}
