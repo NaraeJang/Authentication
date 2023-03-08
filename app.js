@@ -2,6 +2,8 @@
 
 const express = require('express');
 const ejs = require('ejs');
+const mongoose = require("mongoose");
+const bodyParser = require('body-parser');
 
 const app = express();
 
@@ -9,8 +11,25 @@ app.set('view engine', 'ejs');
 // app.use(bodyParser.urlencoded({
 //     extended: true
 // }));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use(express.static('public'));
 
+
+
+
+/////Mongoose Set Up/////
+mongoose.connect('mongodb://127.0.0.1:27017/userDB', {
+    useNewUrlParser: true
+});
+
+const userSchema = {
+    email: String,
+    password: String
+};
+
+const User = new mongoose.model('User', userSchema);
 
 
 
@@ -20,14 +39,41 @@ app.get('/', (req, res) => {
     res.render('home');
 });
 
-app.get('/login', (req, res) => {
+app.route('/login')
+
+.get((req, res) => {
     res.render('login');
+})
+
+.post((req, res)=> {
+
 });
 
 
-app.get('/register', (req, res) => {
-    res.render('register');
-});
+
+
+app.route('/register')
+
+    .get((req, res) => {
+        res.render('register');
+    })
+
+    .post(async (req, res) => {
+        const newUser = new User({
+            email: req.body.username,
+            password: req.body.password
+        });
+
+        try {
+            newUser.save();
+            res.render('secrets');
+            console.log("Successfully added the new user.");
+        } catch (err) {
+            console.log(err);
+        }
+
+    });
+
 
 
 
