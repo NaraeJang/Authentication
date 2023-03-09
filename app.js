@@ -38,7 +38,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/userDB', {
 
 const userSchema = new mongoose.Schema({
     email: String,
-    password: String
+    password: String,
+    googleId: String
 });
 
 userSchema.plugin(passportLocalMongoose); //To hash and salt our passwords and to save our users into our MongoDB database.
@@ -52,16 +53,13 @@ const User = new mongoose.model('User', userSchema);
 
 passport.use(User.createStrategy());
 
-passport.serializeUser(function(user, cb) {
-    process.nextTick(function() {
-      return cb(null, user.id);
-    });
+passport.serializeUser(function(user, done) {
+   done(null, user.id);
   });
   
-  passport.deserializeUser(function(id, cb) {
-    db.get('SELECT * FROM users WHERE id = ?', [ id ], function(err, user) {
-      if (err) { return cb(err); }
-      return cb(null, user);
+  passport.deserializeUser(function(id, done) {
+    User.findById(id, function(err, user) {
+        done(err, user);
     });
   });
 
