@@ -5,19 +5,23 @@ const express = require('express');
 const ejs = require('ejs');
 const mongoose = require("mongoose");
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
-
+const session = require('express-session');
+const passport = require('passport');
+const passportLocalMongoose = require('passport-local-mongoose');
 const app = express();
 
 app.set('view engine', 'ejs');
-// app.use(bodyParser.urlencoded({
-//     extended: true
-// }));
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(express.static('public'));
+app.use(session({
+    secret: "Our littile secret.",
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 
@@ -32,6 +36,7 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
+userSchema.plugin(passportLocalMongoose); //To hash and salt our passwords and to save our users into our MongoDB database.
 
 
 
@@ -39,7 +44,10 @@ const userSchema = new mongoose.Schema({
 
 const User = new mongoose.model('User', userSchema);
 
+passport.use(User.createStrategy());
 
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 
 /////Starting From Here/////
@@ -54,34 +62,19 @@ app.route('/login')
     })
 
     .post((req, res) => {
-        const username = req.body.username;
-        const password = req.body.password;
 
-        User.findOne({
-                email: username
-            })
-            .then((foundUser) => {
-                if (foundUser) {
-
-                    bcrypt.compare(password, foundUser.password, function (err, result) {
-                        if (result == true) {
-                            res.render("secrets");
-                        } else {
-                            console.log('The password does not match with the email. Retry it.');
-                            res.redirect('login');
-                        }
-                    });
-                };
-            })
-            .catch((err) => {
-                console.log(err);
-                res.send(400, "Bad Request");
-            });
 
     });
 
 
-
+app.get("/secrets", function (req, res) {
+    //Checking if the user is authenticated we send the user to the secrets page.
+    if (req.isAuthenticated()) {
+        res.render("secrets");
+    } else {
+        res.redirect("login");
+    }
+}); //We are going to check if the user authenticated.
 
 app.route('/register')
 
@@ -91,21 +84,18 @@ app.route('/register')
 
     .post(async (req, res) => {
 
-        bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
-            const newUser = new User({
-                email: req.body.username,
-                password: hash
-            });
-
-            try {
-                newUser.save();
-                res.render('secrets');
-                console.log("Successfully added the new user.");
-            } catch (err) {
+        User.register({
+            username: req.body.username
+        }, req.body.password).then(err, user => {
+            if (err) {
                 console.log(err);
+                res.redirect("/register");
+            } else {
+                passport.authenticate("local")(req, res, function () {
+                    res.redirect("/secrets");
+                });
             }
         });
-
 
     });
 
