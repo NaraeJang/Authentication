@@ -4,6 +4,7 @@ const express = require('express');
 const ejs = require('ejs');
 const mongoose = require("mongoose");
 const bodyParser = require('body-parser');
+const encrypt =require('mongoose-encryption');
 
 const app = express();
 
@@ -24,10 +25,15 @@ mongoose.connect('mongodb://127.0.0.1:27017/userDB', {
     useNewUrlParser: true
 });
 
-const userSchema = {
+const userSchema = new mongoose.Schema ({
     email: String,
     password: String
-};
+});
+
+const secret = "Thisisourlittlesecret.";
+
+userSchema.plugin(encrypt, {secret: secret, encryptedFields: ['password'] }); 
+//encryption always has to be first before creating mongoose.model.
 
 const User = new mongoose.model('User', userSchema);
 
