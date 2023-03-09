@@ -52,8 +52,18 @@ const User = new mongoose.model('User', userSchema);
 
 passport.use(User.createStrategy());
 
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function(user, cb) {
+    process.nextTick(function() {
+      return cb(null, user.id);
+    });
+  });
+  
+  passport.deserializeUser(function(id, cb) {
+    db.get('SELECT * FROM users WHERE id = ?', [ id ], function(err, user) {
+      if (err) { return cb(err); }
+      return cb(null, user);
+    });
+  });
 
 passport.use(new GoogleStrategy({
         clientID: process.env.CLIENT_ID,
