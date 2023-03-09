@@ -10,6 +10,8 @@ const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
 const app = express();
 
+mongoose.set('strictQuery', true);
+
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({
     extended: true
@@ -85,17 +87,17 @@ app.route('/register')
     .post(async (req, res) => {
 
         User.register({
-            username: req.body.username
-        }, req.body.password).then(err, user => {
-            if (err) {
+                username: req.body.username
+            }, req.body.password).then(user => {
+                if (!user) {
+                    res.redirect("/register");
+                } else {
+                    passport.authenticate('local')(req,res,()=>{res.redirect("/secrets")})
+                }
+            })
+            .catch(err => {
                 console.log(err);
-                res.redirect("/register");
-            } else {
-                passport.authenticate("local")(req, res, function () {
-                    res.redirect("/secrets");
-                });
-            }
-        });
+            });
 
     });
 
