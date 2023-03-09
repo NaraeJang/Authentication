@@ -64,7 +64,20 @@ app.route('/login')
     })
 
     .post((req, res) => {
+        const newUser = new User({
+            username: req.body.username,
+            password: req.body.password
+        });
 
+        req.logIn(newUser, function (err) {
+            if (err) {
+                console.log(err);
+            } else {
+                passport.authenticate("local")(req, res, () => {
+                    res.redirect("/secrets")
+                });
+            }
+        });
 
     });
 
@@ -92,7 +105,9 @@ app.route('/register')
                 if (!user) {
                     res.redirect("/register");
                 } else {
-                    passport.authenticate('local')(req,res,()=>{res.redirect("/secrets")})
+                    passport.authenticate('local')(req, res, () => {
+                        res.redirect("/secrets")
+                    })
                 }
             })
             .catch(err => {
@@ -101,6 +116,16 @@ app.route('/register')
 
     });
 
+
+
+
+
+    app.get("/logout", function(req, res) {
+        req.logout(function(err) {
+            if (err) { return next(err); }
+            res.redirect('/');
+          });
+    });
 
 
 
