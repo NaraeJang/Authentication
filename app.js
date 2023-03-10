@@ -39,7 +39,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/userDB', {
 const userSchema = new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: String
 });
 
 userSchema.plugin(passportLocalMongoose); //To hash and salt our passwords and to save our users into our MongoDB database.
@@ -131,13 +132,48 @@ app.get('/auth/google/secrets',
 
 
 app.get("/secrets", function (req, res) {
-    //Checking if the user is authenticated we send the user to the secrets page.
+  User.find({ "secret": {$ne:null} }, function(err, foundUsers) {
+        if(err) {
+            console.log(err);
+        } else {
+            if (foundUsers) {
+                res.render("secrets", {usersWithSecrets: foundUsers});
+            }
+        }
+  });
+}); 
+
+
+
+
+app.route('/submit')
+
+.get(function(req, res) {
     if (req.isAuthenticated()) {
-        res.render("secrets");
+        res.render("submit");
     } else {
-        res.redirect("login");
+        res.redirect("/login");
     }
-}); //We are going to check if the user authenticated.
+})
+
+.post(function(req, res) {
+    const submittedSecret = req.body.secret;
+
+    console.log(req.user.id);
+
+    User.findById(req.user.id, function(err, foundUser) {
+        if(err) {
+            console.log(err);
+        } else {
+            foundUser.secret = submittedSecret;
+            foundUser.save(function() {
+                res.redirect("/secrets");
+            });
+        }
+    });
+});
+
+
 
 app.route('/register')
 
